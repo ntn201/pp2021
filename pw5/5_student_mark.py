@@ -7,18 +7,30 @@ class Class:
         self.__courses = []
     
     def enroll_student(self,id,name,dob):
+        try:
+            file = open("students.txt","r+")
+        except:
+            print("Something went wrong")
         student = Student(id,name,dob)
         if student.is_valid():
             self.__students.append(student)
             self.__students = sorted(self.__students, key=lambda s: s.get_id())
+            student.save(file)
+            file.close()
             return True
         return False
     
     def add_course(self,id,name,credits):
+        try:
+            file = open("courses.txt","r+")
+        except:
+            print("Something went wrong")
         course = Course(id,name,credits)
         if (course.is_valid()):
             self.__courses.append(course)
             self.__courses = sorted(self.__courses, key=lambda c: c.get_id())
+            course.save(file)
+            file.close()
             return True
         return False
     
@@ -49,15 +61,15 @@ class Class:
         return None
 
     def list_students(self):
-        print("There are {no_students} students!".format(no_students=len(self.__students)))
+        print(f"There are {len(self.__students)} students!")
         for s in self.__students:
-            print("{id}: {name}".format(id=s.get_id(), name=s.get_name()))
+            print(f"{s.get_id()}: {s.get_name()}")
         print()
 
     def list_courses(self):
-            print("There are {no_courses} courses!".format(no_courses=len(self.__courses)))
+            print(f"There are {len(self.__courses)} courses!")
             for c in self.__courses:
-                print("{id}: {name}".format(id=c.get_id(), name=c.get_name()))
+                print(f"{c.get_id()}: {c.get_name()}")
             print()
 
 
@@ -102,8 +114,24 @@ class Course:
         return False
 
     def set_student_mark(self,id,mark):
+        try:
+            file = open('marks.txt',"r+")
+            updated = False
+        except:
+            print("Something went wrong")
         if self.validate_mark(mark):
             self.__marks[str(id)] = mark
+            lines = file.readlines()
+            for i, l in enumerate(lines):
+               if f"{self.__id} {id}" in l:
+                   lines[i] = f"{self.__id} {id} {mark}\n"
+                   updated = True
+            if updated:
+                file = open("marks.txt","w")
+                file.writelines(lines)
+            else:
+                file.write(f"{self.__id} {id} {mark}\n")
+            file.close()
             return True
         return False
 
@@ -112,6 +140,12 @@ class Course:
 
     def is_valid(self):
         return self.validate_id(self.__id) and self.validate_name(self.__name) and self.validate_credits(self.__credits)
+    
+    def save(self, file):
+        try:
+            file.write(f"{self.__id} {self.__name} {self.__credits}\n")
+        except:
+            print("Something went wrong!")
 
 
 class Student:
@@ -137,7 +171,7 @@ class Student:
         return self.__name
 
     def validate_id(self,id):
-        return type(id) == int and id > 0 and (not self.is_enrolled(id))
+        return type(id) == int and id > 0
     
     def validate_name(self,name):
         return type(name) == str and len(name) > 0
@@ -177,14 +211,33 @@ class Student:
         return self.__name
 
     def get_dob(self):
-        return "{D}-{M}-{Y}".format(D=self.__dob.day,M=self.__dob.month,Y=self.__dob.year)
+        return f"{self.__dob.day}-{self.__dob.month}-{self.__dob.year}"
 
     def get_mark(self,course_id):
         return self.__enrolled_courses.get(str(id)).get_student_mark(self.__id)
     
     def is_valid(self):
-        return True
-        # self.validate_id(self.__id) and self.validate_name(self.__name) and (self.__dob != None)
+        return self.validate_id(self.__id) and self.validate_name(self.__name) and (self.__dob != None)
+
+    def save(self):
+        
+        file = open("student.txt","r+")
+        lines = file.readlines()
+        for i, l in enumerate(lines):
+            if f"{self.__id} " in l:
+                lines[i] = f"{self.__id} {id} {mark}\n"
+                updated = True
+        if updated:
+            file = open("marks.txt","w")
+            file.writelines(lines)
+        else:
+            file.write(f"{self.__id} {id} {mark}\n")
+        file.close()
+
+        try:
+            file.write(f"{self.__id} {self.__name} {self.__dob}\n")
+        except:
+            print("Something went wrong!")
 
     
 class Program():
@@ -241,7 +294,7 @@ class Program():
 
         mark = course.get_student_mark(student_id)
         if mark != None:
-            print("Student id: {id} - {name}: {mark}\n".format(id=student_id, name=course.get_name(), mark=mark))
+            print(f"Student id: {student_id} - {course.get_name()}: {mark}\n")
         else:
             print("Not updated\n")
     
